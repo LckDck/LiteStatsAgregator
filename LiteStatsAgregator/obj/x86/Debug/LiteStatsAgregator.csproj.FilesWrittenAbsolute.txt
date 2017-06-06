@@ -1,0 +1,5 @@
+/Users/oxanagrishchenko/Projects/LiteStatsAgregator/LiteStatsAgregator/obj/x86/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/Users/oxanagrishchenko/Projects/LiteStatsAgregator/LiteStatsAgregator/bin/Debug/LiteStatsAgregator.exe.mdb
+/Users/oxanagrishchenko/Projects/LiteStatsAgregator/LiteStatsAgregator/bin/Debug/LiteStatsAgregator.exe
+/Users/oxanagrishchenko/Projects/LiteStatsAgregator/LiteStatsAgregator/obj/x86/Debug/LiteStatsAgregator.exe
+/Users/oxanagrishchenko/Projects/LiteStatsAgregator/LiteStatsAgregator/obj/x86/Debug/LiteStatsAgregator.exe.mdb

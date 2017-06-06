@@ -1,0 +1,30 @@
+﻿<Properties StartupConfiguration="{799D974C-4701-4FC7-B738-FB2ACEAE8C5F}|Default">
+  <MonoDevelop.Ide.Workbench ActiveDocument="LiteStatsAgregator/Game.cs">
+    <Files>
+      <File FileName="LiteStatsAgregator/Program.cs" Line="16" Column="3" />
+      <File FileName="LiteStatsAgregator/HtmlReader.cs" Line="26" Column="10" />
+      <File FileName="LiteStatsAgregator/DataBase.cs" Line="53" Column="4" />
+      <File FileName="LiteStatsAgregator/Game.cs" Line="6" Column="3" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="LiteStatsAgregator" expanded="True">
+            <Node name="LiteStatsAgregator" expanded="True">
+              <Node name="References" expanded="True" />
+              <Node name="Properties" expanded="True" />
+              <Node name="Game.cs" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
+  <MonoDevelop.Ide.ItemProperties.LiteStatsAgregator PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MultiItemStartupConfigurations />
+</Properties>

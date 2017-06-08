@@ -34,12 +34,14 @@ namespace LiteStatsAgregator
 			Teams = await ReadTeams ();
 
 			//получить id всех рейтинговых игр 
+
 			RatingGameIds = await ReadGameIds ();
 
 			//получить все рейтинговые игры
 			RatingGames = await ReadGames ();
 
 		}
+
 
 		async Task<List<GameByTeam>> ReadGames ()
 		{
@@ -50,11 +52,42 @@ namespace LiteStatsAgregator
 				var url = $"http://lite.dzzzr.ru/kaliningrad/?section=arc&what=stat&gmid={id}";
 				var html = await HtmlReader.Instance.ReadHtml (url);
 
-				var teamIds = GetTeams (html);
-				foreach (var teamId in teamIds) {
-					var gameInfo = GetGameInfo (html, id.ToString (), teamId);
-					result.Add (gameInfo);
+				var teamIds = GetInGameTeams (html);
+
+				if (teamIds.Any ()) {
+					Console.WriteLine ($"... New game type id = {id}");
+
+					if (id == 169) {
+						Console.WriteLine (1);
+					}
+
+					var places = GetPlaces (html);
+					var commonTimes = GetCommonTime (html);
+					var timeToPrev = GetTimeToPrevious (html);
+
+					var ind = 0;
+					foreach (var teamId in teamIds) {
+						//не учитываем дисквалифицированных
+						if (ind >= places.Count) {
+							break;
+						}
+						var gameInfo = GetGameInfo (html, id.ToString (), teamId);
+						gameInfo.TimeToPrevious = timeToPrev [ind];
+						gameInfo.CommonTime = commonTimes [ind];
+						gameInfo.Place = places [ind];
+						Console.WriteLine ($"  time to prev = {timeToPrev [ind]}");
+						Console.WriteLine ($"  common time = {commonTimes [ind]}");
+						Console.WriteLine ($"  place = {places [ind]}");
+						result.Add (gameInfo);
+
+						ind++;
+					}
+
+				} else {
+					Console.WriteLine ($"... Old game type id = {id}");
 				}
+
+
 			}
 			return result;
 		}
@@ -65,58 +98,64 @@ namespace LiteStatsAgregator
 			var info = new GameByTeam ();
 			info.Id = id;
 			info.TeamId = teamId;
-			info.TimeToPrevious = GetTimeToPrevious (html, teamId);
-			info.CommonTime = GetCommonTime (html, teamId);
-			info.Place = GetPlace (html, teamId);
-			info.LevelTimes = GetLevelTimes (html, teamId);
 			return info;
 		}
 
-		List<string> GetTeams (string html)
-		{
-			var result = new List<string> ();
 
-			var startString = "color=\"#00ff00\">";
-			var endString = "</font></font>";
-			var oldMatches = GetMatches (html, startString, endString);
-			if (oldMatches.Count > 0) {
-				Console.WriteLine ("... old game type");
-				var noIdCount = 1;
-				foreach (var match in oldMatches) {
-					if (!Teams.ContainsValue (match)) {
-						var id = ( - noIdCount++).ToString();
-						Console.WriteLine ($"... there is no team named {match} get id={id}");
-						Teams.Add (id, match);
-					}
-				}
-			} else {
-				startString = "";
-				endString = "";
-				Console.WriteLine ("... new game type");
-				var newMatches = GetMatches (html, startString, endString);
-			}
+		List<string> GetInGameTeams (string html)
+		{
+			var startString = "?section=teams&teamID=";
+			var endString = " id=tmname>";
+			var result = GetMatches (html, startString, endString);
 			return result;
 		}
+
 
 		List<int> GetLevelTimes (string html, string teamId)
 		{
 			throw new NotImplementedException ();
 		}
 
-		int GetPlace (string html, string teamId)
+		List<int> GetPlaces (string html)
 		{
-			throw new NotImplementedException ();
+			var startString = "<td style='text-align:center' id=fulltime>";
+			var endString = "</td>";
+
+			var result = GetMatches (html, startString, endString);
+			if (result.Find (item => item.Contains("/")) != null) {
+				result = result.Select (item => { return item.Substring (0, item.Length / 2 - 2 + 1); }).ToList ();
+			}
+
+			result.RemoveAll (item => item.Any (char.IsLetter));
+			return result.Select (item => int.Parse (item)).ToList ();
 		}
 
-		int GetCommonTime (string html, string teamId)
+		List<int> GetCommonTime (string html)
 		{
-			throw new NotImplementedException ();
+			var startString = "<td id=fulltime>";
+			var endString = "</td>";
+			var strings = GetMatches (html, startString, endString);
+			return strings.Select (item => GetTime (item)).ToList ();
 		}
 
-		int GetTimeToPrevious (string html, string teamId)
+		List<int> GetTimeToPrevious (string html)
 		{
-			throw new NotImplementedException ();
+			var startString = "<!--delta--><td>";
+			var endString = "</td><!--deltaend-->";
+			return GetMatches (html, startString, endString).Select (item => {
+				return item.Contains ("-") ? "00:00:00" : item;
+			}).Select (str => str.Substring (str.Length - 8)).Select (item => GetTime (item)).ToList ();
 		}
+
+
+		int GetTime (string threePartTime)
+		{
+			TimeSpan ts = TimeSpan.Parse (threePartTime);
+			return (int)ts.TotalSeconds;
+		}
+
+
+		Dictionary<int, int> SeasonGameIds = new Dictionary<int, int> ();
 
 		async Task<List<int>> ReadGameIds ()
 		{
@@ -132,8 +171,7 @@ namespace LiteStatsAgregator
 					if (IsEmptyTable (html)) {
 						break;
 					}
-
-					var newGameIds = GetGameIdsFrom (html);
+					var newGameIds = GetGameIdsFrom (html, season);
 					result.AddRange (newGameIds);
 				}
 			}
@@ -171,6 +209,7 @@ namespace LiteStatsAgregator
 				if (indexStart == -1) {
 					break;
 				}
+
 				indexEnd = text.IndexOf (endString, indexStart);
 				if (indexStart != -1 && indexEnd != -1) {
 
@@ -180,6 +219,7 @@ namespace LiteStatsAgregator
 					if (substrStartIndex + substrLength > text.Length) {
 						exit = true;
 					}
+
 					var substring = text.Substring (substrStartIndex, substrLength);
 					if (string.IsNullOrEmpty (substring)) {
 						break;
@@ -196,7 +236,7 @@ namespace LiteStatsAgregator
 		}
 
 
-		List<int> GetGameIdsFrom (string html)
+		List<int> GetGameIdsFrom (string html, int season)
 		{
 			var result = new List<int> ();
 			var startString = "&gmid=";
@@ -206,6 +246,7 @@ namespace LiteStatsAgregator
 				int id = 0;
 				int.TryParse (str, out id);
 				if (id != 0) {
+					SeasonGameIds.Add (id, season);
 					result.Add (id);
 				}
 			}

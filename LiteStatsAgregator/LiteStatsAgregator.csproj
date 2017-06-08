@@ -40,6 +40,7 @@
     <Compile Include="DataBase.cs" />
     <Compile Include="HtmlReader.cs" />
     <Compile Include="GameByTeam.cs" />
+    <Compile Include="FirstGamesHardcode.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

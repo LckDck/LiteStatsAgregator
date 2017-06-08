@@ -11,5 +11,6 @@ namespace LiteStatsAgregator
 		public int CommonTime { get; set;}
 		public int TimeToPrevious { get; set;}
 		public int Place { get; set;}
+		public int Season { get; set;}
 	}
 }

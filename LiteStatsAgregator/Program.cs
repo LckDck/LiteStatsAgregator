@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace LiteStatsAgregator
 {
@@ -13,12 +14,14 @@ namespace LiteStatsAgregator
 			//Output statistics
 		}
 
+		static DataBase _table;
 
 
 		static void CreateDataBase ()
 		{
-			var table = new DataBase ();
-			table.InitializeAsync ().Wait ();
+			_table = new DataBase ();
+			_table.InitializeAsync ().Wait ();
+
 		}
 	}
 }

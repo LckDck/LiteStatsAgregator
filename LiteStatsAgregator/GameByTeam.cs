@@ -12,5 +12,7 @@ namespace LiteStatsAgregator
 		public int TimeToPrevious { get; set;}
 		public int Place { get; set;}
 		public int Season { get; set;}
+		public string TeamName { get; set; }
+		public string GameName { get; internal set; }
 	}
 }

@@ -11,15 +11,22 @@ namespace LiteStatsAgregator
 		int MAX_SEASON_NO = 1000;
 		int MIN_YEAR = 2007;
 		int MAX_YEAR = DateTime.Now.Year;
+		string DeletedTeamName = "*TEAM DELETED*";
 
 		string GetURL (int year, int season)
 		{
 			return $"http://lite.dzzzr.ru/kaliningrad/?section=rating&year={year}&season={season}&sgms=1";
 		}
 
-		List<int> RatingGameIds = new List<int> ();
-		List<GameByTeam> RatingGames = new List<GameByTeam> ();
-		Dictionary<string, string> Teams = new Dictionary<string, string> ();
+		string GetURL (int year)
+		{
+			return $"http://lite.dzzzr.ru/kaliningrad/?section=rating&year={year}&sgms=1";
+		}
+
+		public List<int> RatingGameIds = new List<int> ();
+		public Dictionary<int, string> GameNames = new Dictionary<int, string> ();
+		public List<GameByTeam> RatingGames = new List<GameByTeam> ();
+		public Dictionary<string, string> Teams = new Dictionary<string, string> ();
 
 		public DataBase ()
 		{
@@ -36,34 +43,61 @@ namespace LiteStatsAgregator
 			//получить id всех рейтинговых игр 
 
 			RatingGameIds = await ReadGameIds ();
+			GameNames = await ReadGameNames ();
 
 			//получить все рейтинговые игры
 			RatingGames = await ReadGames ();
 
+
+
+			var games = RatingGames.Where (item => item.TeamName == "Pepperhouse").ToList ();
+
+			var min = 1000000;
+			foreach (var game in games) {
+				var newMin = game.LevelTimes.Min((arg) => arg);
+				if (newMin < min) {
+					min = newMin;
+					Console.WriteLine ($"The fastest level is in game {game.GameName}({game.id}) is {TimeSpan.FromSeconds(min)}");
+				}
+			}
 		}
 
+		async Task<Dictionary<int, string>> ReadGameNames ()
+		{
+			var result = new Dictionary<int, string> ();
+			foreach (var gameId in RatingGameIds) {
+
+				var gameUrl = $"http://lite.dzzzr.ru/kaliningrad/?section=arc&what=stat&gmid={gameId}";
+				var html = await HtmlReader.Instance.ReadHtml (gameUrl);
+				var startString = "<h1>&laquo;";
+				var endString = "&raquo; (Лайт)";
+				var matches = GetMatches (html, startString, endString);
+				foreach (var match in matches) {
+					result.Add (gameId, match);
+					Console.WriteLine ($"------- {gameId} {match}");
+				}
+			}
+			return result;
+		}
 
 		async Task<List<GameByTeam>> ReadGames ()
 		{
 			var result = new List<GameByTeam> ();
 			var count = 1;
-			foreach (var id in RatingGameIds) {
+			foreach (var gameId in RatingGameIds) {
 				Console.WriteLine ($"Read game {count++}/{RatingGameIds.Count}");
-				var url = $"http://lite.dzzzr.ru/kaliningrad/?section=arc&what=stat&gmid={id}";
+				var url = $"http://lite.dzzzr.ru/kaliningrad/?section=arc&what=stat&gmid={gameId}";
 				var html = await HtmlReader.Instance.ReadHtml (url);
 
 				var teamIds = GetInGameTeams (html);
 
 				if (teamIds.Any ()) {
-					Console.WriteLine ($"... New game type id = {id}");
-
-					if (id == 169) {
-						Console.WriteLine (1);
-					}
+					Console.WriteLine ($"... New game type id = {gameId}");
 
 					var places = GetPlaces (html);
 					var commonTimes = GetCommonTime (html);
 					var timeToPrev = GetTimeToPrevious (html);
+					var levels = GetLevels (html);
 
 					var ind = 0;
 					foreach (var teamId in teamIds) {
@@ -71,33 +105,55 @@ namespace LiteStatsAgregator
 						if (ind >= places.Count) {
 							break;
 						}
-						var gameInfo = GetGameInfo (html, id.ToString (), teamId);
+						var gameInfo = GetGameInfo (html, gameId.ToString (), teamId);
 						gameInfo.TimeToPrevious = timeToPrev [ind];
 						gameInfo.CommonTime = commonTimes [ind];
 						gameInfo.Place = places [ind];
-						Console.WriteLine ($"  time to prev = {timeToPrev [ind]}");
-						Console.WriteLine ($"  common time = {commonTimes [ind]}");
-						Console.WriteLine ($"  place = {places [ind]}");
+						gameInfo.Season = SeasonGameIds [gameId];
+						gameInfo.LevelTimes = levels [ind];
+						var teamName = Teams.ContainsKey (teamId) ? Teams [teamId] : DeletedTeamName;
+						Console.WriteLine ($"  {teamName} game id = {gameId}, name = {GameNames [gameId]}");
+						Console.WriteLine ($"  {teamName} season = {gameInfo.Season}");
+						Console.WriteLine ($"  {teamName} time to prev = {gameInfo.TimeToPrevious}");
+						Console.WriteLine ($"  {teamName} common time = {gameInfo.CommonTime}");
+						Console.WriteLine ($"  {teamName} place = {places [ind]}");
+						Console.WriteLine ($"  {teamName} levels = {string.Join (", ", gameInfo.LevelTimes.ToArray ())}");
 						result.Add (gameInfo);
 
 						ind++;
 					}
 
 				} else {
-					Console.WriteLine ($"... Old game type id = {id}");
+					Console.WriteLine ($"... Old game type id = {gameId}");
 				}
-
-
 			}
 			return result;
 		}
 
+		List<List<int>> GetLevels (string html)
+		{
+			var result = new List<List<int>> ();
+			var startString = "<!--cols ";
+			var endString = "| colsend-->";
+			var matches = GetMatches (html, startString, endString);
+			var levels = matches.Select (item => item.Split ('|').ToList ()).ToList ();
+
+			foreach (var level in levels) {
+				level.RemoveAll (item => !item.All (char.IsDigit) || string.IsNullOrEmpty (item));
+				var intLevels = level.Select (item => int.Parse (item)).ToList ();
+				result.Add (intLevels);
+
+			}
+			return result;
+		}
 
 		GameByTeam GetGameInfo (string html, string id, string teamId)
 		{
 			var info = new GameByTeam ();
 			info.Id = id;
 			info.TeamId = teamId;
+			info.TeamName = (Teams.ContainsKey (teamId)) ? Teams [teamId] : DeletedTeamName;
+			info.GameName = GameNames [int.Parse (id)];
 			return info;
 		}
 
@@ -122,7 +178,7 @@ namespace LiteStatsAgregator
 			var endString = "</td>";
 
 			var result = GetMatches (html, startString, endString);
-			if (result.Find (item => item.Contains("/")) != null) {
+			if (result.Find (item => item.Contains ("/")) != null) {
 				result = result.Select (item => { return item.Substring (0, item.Length / 2 - 2 + 1); }).ToList ();
 			}
 
@@ -161,18 +217,31 @@ namespace LiteStatsAgregator
 		{
 			var result = new List<int> ();
 			var lastSeason = 1;
+
+			var lastYearAttempts = 0;
 			for (var year = MIN_YEAR; year <= MAX_YEAR; year++) {
 				Console.WriteLine ($".... Getting game ids for year {year} ....");
 				for (var season = lastSeason; season < MAX_SEASON_NO; season++) {
 					//если нет таблички - значит в в этом году сезон другой.
-					lastSeason++;
 					var url = GetURL (year, season);
+					Console.WriteLine ($"   Trying to read year {year} season {season}");
 					var html = await HtmlReader.Instance.ReadHtml (url);
 					if (IsEmptyTable (html)) {
-						break;
+
+						if (year == MAX_YEAR && lastYearAttempts == 0) {
+							url = GetURL (year);
+							html = await HtmlReader.Instance.ReadHtml (url);
+							lastYearAttempts++;
+						} else {
+							Console.WriteLine ($"  - year {year} season{season} empty");
+							break;
+						}
 					}
+
+					Console.WriteLine ($"  + season{season} exists");
 					var newGameIds = GetGameIdsFrom (html, season);
 					result.AddRange (newGameIds);
+					lastSeason++;
 				}
 			}
 			result.Sort ();
@@ -246,8 +315,11 @@ namespace LiteStatsAgregator
 				int id = 0;
 				int.TryParse (str, out id);
 				if (id != 0) {
-					SeasonGameIds.Add (id, season);
-					result.Add (id);
+					if (!SeasonGameIds.ContainsKey (id)) {
+						SeasonGameIds.Add (id, season);
+						result.Add (id);
+					}
+
 				}
 			}
 			return result;

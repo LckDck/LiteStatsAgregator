@@ -7,6 +7,8 @@ namespace LiteStatsAgregator
 	{
 		public static void Main (string [] args)
 		{
+			//Console.WriteLine ("Введите название команды:");
+			//Team = Console.ReadLine ();
 			//Create database from tables
 			CreateDataBase ();
 			//Get all statistics

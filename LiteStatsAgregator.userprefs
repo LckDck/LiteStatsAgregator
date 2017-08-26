@@ -1,11 +1,12 @@
 ﻿<Properties StartupConfiguration="{799D974C-4701-4FC7-B738-FB2ACEAE8C5F}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="LiteStatsAgregator/FirstGamesHardcode.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="LiteStatsAgregator/DataBase.cs">
     <Files>
-      <File FileName="LiteStatsAgregator/Program.cs" Line="21" Column="1" />
-      <File FileName="LiteStatsAgregator/HtmlReader.cs" Line="35" Column="3" />
-      <File FileName="LiteStatsAgregator/DataBase.cs" Line="173" Column="7" />
-      <File FileName="LiteStatsAgregator/GameByTeam.cs" Line="6" Column="15" />
-      <File FileName="LiteStatsAgregator/FirstGamesHardcode.cs" Line="81" Column="6" />
+      <File FileName="LiteStatsAgregator/Program.cs" Line="25" Column="1" />
+      <File FileName="LiteStatsAgregator/HtmlReader.cs" Line="18" Column="22" />
+      <File FileName="LiteStatsAgregator/DataBase.cs" Line="228" Column="7" />
+      <File FileName="LiteStatsAgregator/GameByTeam.cs" Line="18" Column="13" />
+      <File FileName="LiteStatsAgregator/FirstGamesHardcode.cs" Line="293" Column="4" />
+      <File FileName="LiteStatsAgregator/Game.cs" Line="10" Column="34" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />

@@ -16,6 +16,8 @@ namespace LiteStatsAgregator
         string Lite = "lite";
         string Classic = "classic";
 
+        int StartSeasonNumber = 1;
+
         string Type {
             get {
                 return Lite;
@@ -83,7 +85,7 @@ namespace LiteStatsAgregator
 				//"Синяя яма"
 			};
 
-            //var teamids = new List<string> { "496", "292" };//Teams.Keys;
+            //var teamids = new List<string> { "496", "292" };
             var teamids = Teams.Keys;
 
 
@@ -180,6 +182,11 @@ namespace LiteStatsAgregator
                     }
                 }
 
+                int maxAbsoluteGapInBestTime = 0;
+                string maxAbsoluteGapInBestTimeGameId = string.Empty;
+				double maxDependendGapInBestTime = 0;
+                string maxDependendGapInBestTimeGameId = string.Empty;
+
                 var ids = games.Select (item => item.Id).ToList ();
                 var gameInfos = GamesByTeam.FindAll (item => ids.Contains (item.Id));
                 var bestPlacesGameIds = new List<string> ();
@@ -191,8 +198,21 @@ namespace LiteStatsAgregator
                         }
 
                         if (g.LevelTimes [ind] == g.BestTimes [ind]) {
-                            if (g.TeamName == team) {
-                                bestPlacesGameIds.Add (g.Id);
+                            if (g.TeamName == team)
+                            {
+                                bestPlacesGameIds.Add(g.Id);
+
+                                var absoluteDiffBetweenFirstAndSecondTime = g.SecondBestTimes[ind] - g.BestTimes[ind];
+                                if (absoluteDiffBetweenFirstAndSecondTime > maxAbsoluteGapInBestTime) {
+                                    maxAbsoluteGapInBestTime = absoluteDiffBetweenFirstAndSecondTime;
+                                    maxAbsoluteGapInBestTimeGameId = g.Id;
+                                }
+
+                                var dependantDiffBetweenFirstAndSecondTime = (g.SecondBestTimes[ind] - g.BestTimes[ind]) / ((double)g.BestTimes[ind]);
+								if (dependantDiffBetweenFirstAndSecondTime > maxDependendGapInBestTime) {
+                                    maxDependendGapInBestTime = dependantDiffBetweenFirstAndSecondTime;
+                                    maxDependendGapInBestTimeGameId = g.Id;
+                                }
                             }
                         }
                     }
@@ -240,6 +260,7 @@ namespace LiteStatsAgregator
 
 
                     result += "\n";
+                    result += "\n";
                     result += $"Максимум лучших времен ({max}) в играх :";
 
                     var maxBPGameIds = bestpl.Where (item => item.Key == max).FirstOrDefault().Value;
@@ -250,6 +271,26 @@ namespace LiteStatsAgregator
                     }
 
                 }
+
+                if (!string.IsNullOrEmpty(maxAbsoluteGapInBestTimeGameId))
+                {
+                    result += "\n";
+                    result += "\n";
+                    var minutes = maxAbsoluteGapInBestTime / 60;
+                    var time = $"{minutes}:{maxAbsoluteGapInBestTime - minutes * 60}";
+
+                    var g = Games.Find(item => maxAbsoluteGapInBestTimeGameId == item.Id.ToString());
+
+                    result += $"Максимальный абсолютный отрыв в лучшем времени {time} до ближайшего соперника в игре {g.Date} {g.Name}";
+
+					result += "\n";
+					result += "\n";
+					
+                    g = Games.Find(item => maxDependendGapInBestTimeGameId == item.Id.ToString());
+
+                    result += $"Максимальный относительный отрыв в лучшем времени:\n в {maxDependendGapInBestTime + 1} раз(а) быстрее ближайшего соперника в игре {g.Date} {g.Name}";
+
+				}
 
 
                 var minLevelTime = 1000000000;
@@ -465,7 +506,7 @@ namespace LiteStatsAgregator
         async Task<List<Game>> ReadGames ()
         {
             var result = new List<int> ();
-            var lastSeason = 1;
+            var lastSeason = StartSeasonNumber;
 
             var lastYearAttempts = 0;
             for (var year = MIN_YEAR; year <= MAX_YEAR; year++) {
@@ -503,6 +544,7 @@ namespace LiteStatsAgregator
             foreach (var game in Games) {
                 var allCommandGames = GamesByTeam.Where (item => item.Id == game.Id.ToString ()).ToList ();
                 var minimums = new List<int> ();
+                var secondMinimums = new List<int> ();
 
                 if (!allCommandGames.Any ()) continue;
                 var firstGame = allCommandGames.First ();
@@ -510,15 +552,22 @@ namespace LiteStatsAgregator
 
                 for (var i = 0; i < firstGame.LevelTimes.Count; i++) {
                     var level_i = allCommandGames.Select (item => item.LevelTimes [i]).ToList ();
-                    if (level_i.Distinct ().Count () == 1) {
+                    var diffLevelTimeCount = level_i.Distinct().Count();
+                    if (diffLevelTimeCount == 1 || diffLevelTimeCount == 2) {
                         minimums.Add (0);
+                        secondMinimums.Add (0);
                     } else {
-                        minimums.Add (level_i.Min ());
+                        var min = level_i.Min();
+                        minimums.Add (min);
+                        var tmpForSecondMinimum = level_i;
+                        tmpForSecondMinimum.Remove(min);
+                        secondMinimums.Add(tmpForSecondMinimum.Min());
                     }
                 }
                 var selectedGames = GamesByTeam.FindAll (item => item.Id == game.Id.ToString ());
                 foreach (var g in selectedGames) {
                     g.BestTimes = minimums;
+                    g.SecondBestTimes = secondMinimums;
                 }
             }
         }

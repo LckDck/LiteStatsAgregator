@@ -3,7 +3,7 @@
     <Files>
       <File FileName="LiteStatsAgregator/Program.cs" Line="25" Column="1" />
       <File FileName="LiteStatsAgregator/HtmlReader.cs" Line="18" Column="22" />
-      <File FileName="LiteStatsAgregator/DataBase.cs" Line="228" Column="7" />
+      <File FileName="LiteStatsAgregator/DataBase.cs" Line="248" Column="40" />
       <File FileName="LiteStatsAgregator/GameByTeam.cs" Line="18" Column="13" />
       <File FileName="LiteStatsAgregator/FirstGamesHardcode.cs" Line="293" Column="4" />
       <File FileName="LiteStatsAgregator/Game.cs" Line="10" Column="34" />

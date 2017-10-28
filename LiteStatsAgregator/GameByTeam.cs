@@ -14,7 +14,8 @@ namespace LiteStatsAgregator
 		public int Season { get; set; }
 		public string TeamName { get; set; }
 		public string GameName { get; internal set; }
-		public List<int> BestTimes { get; internal set; }
+        public List<int> BestTimes { get; internal set; }
+		public List<int> SecondBestTimes { get; internal set; }
 		public int TimeToLeader { get; internal set; }
 	}
 }

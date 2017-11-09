@@ -68,10 +68,11 @@ namespace LiteStatsAgregator
         {
 
             var teams = new List<string> {
-                "Pepperhouse",
-				//"Ну хоть какой-нибудь секс..."
-				//"Pepperhouse",
-				//"Полтора Землекопа",
+                //"Pepperhouse",
+				"Ну хоть какой-нибудь секс...",
+				"Pepperhouse",
+                "Полтора Землекопа",
+				"Дети Аналога",
 				//"БЕШЕНЫЙ ХОМЯК",
 				//"ЧЗХ?!", "WTF !?",
 				//"Я И БАЛ ВЫПУСКНИЦ",
@@ -123,7 +124,8 @@ namespace LiteStatsAgregator
                 } else {
                     games = GamesByTeam.FindAll (item => item.TeamId == _id);
                 }
-
+                result += "\n";
+                result += "\n";
                 result += $"Команда {team}";
                 result += "\n";
                 result += "\n";
@@ -151,10 +153,27 @@ namespace LiteStatsAgregator
                     result += "\n";
 
                     result += $"Выиграно игр {won.Count} ";
+                    var maxGap = -1;
+                    GameByTeam maxGapGame = null;
+
                     foreach (var wongame in won) {
                         result += "\n";
+                        var diff = wongame.SecondCommonTime - wongame.CommonTime;
+                        if (diff > maxGap) {
+                            maxGap = diff;
+                            maxGapGame = wongame;
+                        }
+
                         var gameInfo = Games.First (item => item.Id.ToString () == wongame.Id);
                         result += $"        {gameInfo.Date} {gameInfo.Name} (сезон {wongame.Season})";
+                    }
+
+                    result += "\n";
+                    result += "\n";
+                    if (maxGapGame != null)
+                    {
+                        var maxGapGameInfo = Games.First(item => item.Id.ToString() == maxGapGame.Id);
+                        result += $"Максимальный отрыв при победе {TimeSpan.FromSeconds(maxGap)} игра {maxGapGameInfo.Date} {maxGapGame.GameName} ";
                     }
                 } else {
 
@@ -383,6 +402,7 @@ namespace LiteStatsAgregator
                         gameInfo.TimeToPrevious = timeToPrev [ind];
                         gameInfo.TimeToLeader = timeToLead [ind];
                         gameInfo.CommonTime = commonTimes [ind];
+                        gameInfo.SecondCommonTime = commonTimes[1];
                         gameInfo.Place = places [ind];
                         gameInfo.Season = SeasonGameIds [game.Id];
                         gameInfo.LevelTimes = levels [ind];

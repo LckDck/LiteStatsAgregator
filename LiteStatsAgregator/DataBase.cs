@@ -16,13 +16,47 @@ namespace LiteStatsAgregator
         string Lite = "lite";
         string Classic = "classic";
 
-        int StartSeasonNumber = 1;
+
+
+        //********************** CHANGE PARAMETERS HERE ***********************
+        int StartSeasonNumber = 21;
 
         string Type {
             get {
                 return Lite;
             }
         }
+
+        List<string> SelectTeamsToAnalyse ()
+        {
+            return new List<string> {
+                "Pepperhouse"
+                //"Pepperhouse",
+                //"Ну хоть какой-нибудь секс...",
+                //"Pepperhouse",
+                //"Полтора Землекопа",
+                //"Дети Аналога",
+                //"БЕШЕНЫЙ ХОМЯК",
+                //"ЧЗХ?!", "WTF !?",
+                //"Я И БАЛ ВЫПУСКНИЦ",
+                //"Палата N6",
+                //"2goDoom",
+                //"Goroshek, luche tikovka",
+                //"Йопта",
+                //"C-IV",
+                //"Пацы из Чичиваро-Данго",
+                //"Усы, лапы и хвост",
+                //"Синяя яма"
+            };
+
+        }
+        //**********************************************************************
+
+
+
+
+
+
 
         string GetURL (int year, int season)
         {
@@ -46,7 +80,7 @@ namespace LiteStatsAgregator
 
         public async Task InitializeAsync ()
         {
-
+            
             //создать dictionary команд
             Teams = await ReadTeams ();
 
@@ -66,25 +100,7 @@ namespace LiteStatsAgregator
 
         void CreateStatistics ()
         {
-
-            var teams = new List<string> {
-                //"Pepperhouse",
-				"Ну хоть какой-нибудь секс...",
-				"Pepperhouse",
-                "Полтора Землекопа",
-				"Дети Аналога",
-				//"БЕШЕНЫЙ ХОМЯК",
-				//"ЧЗХ?!", "WTF !?",
-				//"Я И БАЛ ВЫПУСКНИЦ",
-				//"Палата N6",
-				//"2goDoom",
-				//"Goroshek, luche tikovka",
-				//"Йопта",
-				//"C-IV",
-				//"Пацы из Чичиваро-Данго",
-				//"Усы, лапы и хвост",
-				//"Синяя яма"
-			};
+            var teams = SelectTeamsToAnalyse();
 
             //var teamids = new List<string> { "496", "292" };
             var teamids = Teams.Keys;
@@ -344,7 +360,7 @@ namespace LiteStatsAgregator
 
                 Console.WriteLine (result);
             } catch (Exception e) {
-                Console.WriteLine ("!!!!!! ", team, _id);
+                Console.WriteLine ($"!!!!!!  {team} {_id}");
             }
         }
 
